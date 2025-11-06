@@ -1,0 +1,15 @@
+node_modules
+bun.lockb
+.drizzle/
+.drizzle
+.drizzle/*
+.dockerignore
+Dockerfile
+.env
+.env.*
+.git
+.gitignore
+README.md
+**/.cursor
+**/.git
+**/.DS_Store

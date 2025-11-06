@@ -1,0 +1,41 @@
+name: Deploy to Azure VM
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into VM and Deploy
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            echo "Cloning repository..."
+            cd /tmp
+            rm -rf civicbetter || true
+            git clone https://github.com/Ms3314/CivicBetter.git civicbetter
+            cd civicbetter
+            
+            echo "Building Docker image from admin folder..."
+            docker build -f admin/Dockerfile -t civicbetter-api:latest ./admin
+            
+            echo "Stopping old container (ignore errors)..."
+            docker stop civicbetter-api || true
+            docker rm civicbetter-api || true
+            
+            echo "Starting new container..."
+            docker run -d \
+              --name civicbetter-api \
+              -p 80:3000 \
+              --env-file /etc/civicbetter/admin.env \
+              --restart unless-stopped \
+              civicbetter-api:latest
+            
+            echo "✅ Deployment completed!"
+

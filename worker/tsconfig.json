@@ -7,8 +7,8 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
-    "rootPath": "./src",
-    "outPath": "./dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
