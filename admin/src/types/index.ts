@@ -15,7 +15,7 @@ export interface Issue {
   title: string;
   description: string;
   createdBy: string;
-  status: 'open' | 'in-progress' | 'resolved' | 'closed';
+  status: 'pending' | 'assigned' | 'accepted' | 'in-progress' | 'completed' | 'rejected';
   createdAt: Date;
   updatedAt: Date;
 }

@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from './routes/auth.routes';
 import issueRoutes from './routes/issue.routes';
 import userRoutes from './routes/user.routes';
+import uploadRoutes from './routes/upload.routes';
 import { initializeSubscriptions } from './subscribers';
 
 const app = express();
@@ -18,6 +19,7 @@ app.get('/health', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/issues', issueRoutes);
 app.use('/users', userRoutes);
+app.use('/upload', uploadRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -31,9 +33,9 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // Initialize PubSub subscriptions
-initializeSubscriptions().catch((error) => {
-  console.error('Failed to initialize PubSub subscriptions:', error);
-});
+// initializeSubscriptions().catch((error) => {
+//   console.error('Failed to initialize PubSub subscriptions:', error);
+// });
 
 const PORT = process.env.PORT || 3000;
 

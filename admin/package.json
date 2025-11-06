@@ -12,6 +12,8 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "drizzle-kit": "^0.31.6",
     "tsx": "^4.20.6"
   },
@@ -20,9 +22,13 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
+    "@supabase/supabase-js": "^2.79.0",
     "@types/express": "^5.0.5",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2"
   }
 }

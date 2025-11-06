@@ -1,5 +1,8 @@
 import type { Request, Response } from 'express';
-import type { CreateIssueRequest, EditIssueRequest, Issue, AuthenticatedRequest } from '../types';
+import type { CreateIssueRequest, EditIssueRequest, AuthenticatedRequest } from '../types';
+import { db } from '../db';
+import { issues } from '../db/schema';
+import { eq, desc, and } from 'drizzle-orm';
 
 /**
  * Issue Controller
@@ -12,24 +15,38 @@ export class IssueController {
    * Requires: Authentication
    */
   static async createIssue(req: Request, res: Response) {
-    // TODO: Validate request body
-    // TODO: Create issue in database
-    // TODO: Return created issue
-
     const authReq = req as AuthenticatedRequest;
-    const body = req.body as CreateIssueRequest;
-
-    const newIssue: Issue = {
-      id: 'issue-id',
-      title: body.title,
-      description: body.description,
-      createdBy: authReq.user!.id,
-      status: 'open',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    const body = req.body as Partial<CreateIssueRequest> & {
+      category?: string;
+      location?: string;
+      photo?: string;
     };
 
-    res.status(201).json(newIssue);
+    if (!body.title || !body.description || !body.category || !body.location) {
+      return res.status(400).json({
+        error: 'Missing required fields: title, description, category, location',
+      });
+    }
+
+    try {
+      const [created] = await db
+        .insert(issues)
+        .values({
+          title: body.title,
+          description: body.description,
+          category: body.category,
+          location: body.location,
+          photo: body.photo ?? null,
+          createdBy: authReq.user!.id,
+          status: 'pending',
+        })
+        .returning();
+
+      return res.status(201).json(created);
+    } catch (error) {
+      console.error('createIssue error:', error);
+      return res.status(500).json({ error: 'Failed to create issue' });
+    }
   }
 
   /**
@@ -48,19 +65,38 @@ export class IssueController {
     if (!id) {
       return res.status(400).json({ error: 'Issue ID is required' });
     }
-    const body = req.body as EditIssueRequest;
-
-    const updatedIssue: Issue = {
-      id,
-      title: body.title || 'Updated Title',
-      description: body.description || 'Updated Description',
-      createdBy: 'user-id',
-      status: body.status || 'open',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    const body = req.body as EditIssueRequest & {
+      category?: string;
+      location?: string;
+      photo?: string | null;
+      assignedTo?: string | null;
     };
 
-    res.json(updatedIssue);
+    try {
+      const [updated] = await db
+        .update(issues)
+        .set({
+          title: body.title,
+          description: body.description,
+          status: body.status,
+          category: body.category,
+          location: body.location,
+          photo: body.photo,
+          assignedTo: body.assignedTo,
+          updatedAt: new Date(),
+        })
+        .where(eq(issues.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ error: 'Issue not found' });
+      }
+
+      return res.json(updated);
+    } catch (error) {
+      console.error('editIssue error:', error);
+      return res.status(500).json({ error: 'Failed to update issue' });
+    }
   }
 
   /**
@@ -78,17 +114,16 @@ export class IssueController {
       return res.status(400).json({ error: 'Issue ID is required' });
     }
 
-    const issue: Issue = {
-      id,
-      title: 'Issue Title',
-      description: 'Issue Description',
-      createdBy: 'user-id',
-      status: 'open',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    res.json(issue);
+    try {
+      const [found] = await db.select().from(issues).where(eq(issues.id, id)).limit(1);
+      if (!found) {
+        return res.status(404).json({ error: 'Issue not found' });
+      }
+      return res.json(found);
+    } catch (error) {
+      console.error('getIssue error:', error);
+      return res.status(500).json({ error: 'Failed to fetch issue' });
+    }
   }
 
   /**
@@ -97,16 +132,29 @@ export class IssueController {
    * Requires: Authentication
    */
   static async listIssues(req: Request, res: Response) {
-    // TODO: Apply filters/pagination from query params
-    // TODO: Fetch issues from database
-    // TODO: Return paginated list
+    const page = Number(req.query.page ?? 1);
+    const limit = Math.min(Number(req.query.limit ?? 10), 50);
+    const offset = (page - 1) * limit;
 
-    res.json({
-      issues: [],
-      total: 0,
-      page: 1,
-      limit: 10,
-    });
+    try {
+      const rows = await db
+        .select()
+        .from(issues)
+        .orderBy(desc(issues.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      // total count
+      const totalRows = await db.select({ id: issues.id }).from(issues);
+      const total = totalRows.length;
+
+      return res.json({ issues: rows, total, page, limit });
+    } catch (error) {
+      console.error('listIssues error:', error);
+      return res.status(500).json({ error: 'Failed to list issues' });
+    }
   }
+
+  
 }
 
