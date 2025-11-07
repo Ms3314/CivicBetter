@@ -1,4 +1,2 @@
-- i need to test the authentication 
-- i need to test the other routes as well
-- basic inssues tracking and other features 
-- impliment the payments thing 
+- we have implimented UPI payments methodoly itself 
+- need to test the worker route and then some other stufff 

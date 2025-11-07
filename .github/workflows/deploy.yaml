@@ -33,11 +33,10 @@ jobs:
             docker run -d \
               --name civicbetter-api \
               --network=host \
-              --e "PORT=3000"
-              --e "DATABASE_URL=${{vars.DB_URL}}" \
+              -e "PORT=3000" \
+              -e "DATABASE_URL=${{ vars.DB_URL }}" \
               --restart unless-stopped \
               civicbetter-api:latest
             
             echo "✅ Deployment completed!"
             echo "ℹ️  Migrations run automatically when container starts"
-
