@@ -70,6 +70,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+app.listen(3000, "0.0.0.0", () => {
+    console.log("Server is running on http://localhost:3000");
+  });
+  
