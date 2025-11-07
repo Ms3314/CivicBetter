@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # --- Base image with Bun ---
-FROM oven/bun:1.1-alpine AS base
+FROM oven/bun:1.2-alpine AS base
 WORKDIR /app
 
 # --- Install dependencies ---
@@ -9,12 +9,13 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
+# --- Copy Prisma schema and generate client ---
+COPY prisma ./prisma
+RUN bun run db:generate
+
 # --- Build/prepare app ---
 COPY tsconfig.json ./
 COPY src ./src
-
-# Optional: copy drizzle config if you plan to run migrations inside container
-COPY drizzle.config.ts ./drizzle.config.ts
 
 # Expose app port
 EXPOSE 3000
@@ -23,6 +24,6 @@ EXPOSE 3000
 ENV NODE_ENV=production
 
 # --- Start ---
-# You can run migrations on startup by uncommenting the line below
-# CMD bun run db:migrate && bun run src/index.ts
-CMD ["bun", "run", "src/index.ts"]
+# Run migrations on container startup, then start the app
+# This ensures migrations are always up-to-date when container starts
+CMD bunx prisma migrate deploy && bun run src/index.ts

@@ -3,10 +3,11 @@ import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes';
 import issueRoutes from './routes/issue.routes';
 import userRoutes from './routes/user.routes';
-import uploadRoutes from './routes/upload.routes';
+// import uploadRoutes from './r₹outes/upload.routes';
 import paymentRoutes from './routes/payment.routes';
 import reviewRoutes from './routes/review.routes';
 import completionRoutes from './routes/completion.routes';
+import workersRoutes from './routes/workers.routes';
 import { swaggerSpec } from './config/swagger.config';
 import { initializeSubscriptions } from './subscribers';
 
@@ -45,9 +46,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/auth', authRoutes);
 app.use('/issues', issueRoutes);
 app.use('/users', userRoutes);
-app.use('/upload', uploadRoutes);
+// app.use('/upload', uploadRoutes);
 app.use('/payments', paymentRoutes);
 app.use('/reviews', reviewRoutes);
+app.use('/workers', workersRoutes);
 app.use('/', completionRoutes);
 
 // 404 handler

@@ -1,8 +1,5 @@
 node_modules
 bun.lockb
-.drizzle/
-.drizzle
-.drizzle/*
 .dockerignore
 Dockerfile
 .env
@@ -13,3 +10,4 @@ README.md
 **/.cursor
 **/.git
 **/.DS_Store
+# Keep Prisma migrations - they're needed in the image

@@ -228,6 +228,125 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        Worker: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            userId: { type: 'string' },
+            description: { type: 'string', nullable: true },
+            tags: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Specialization tags',
+            },
+            location: { type: 'string', nullable: true },
+            status: {
+              type: 'string',
+              enum: ['available', 'busy', 'offline', 'on_leave'],
+            },
+            type: {
+              type: 'string',
+              enum: ['individual', 'organization'],
+            },
+            organizationName: { type: 'string', nullable: true },
+            phone: { type: 'string', nullable: true },
+            upiId: {
+              type: 'string',
+              nullable: true,
+              description: 'UPI ID for payments (e.g., 9876543210@paytm)',
+            },
+            bankAccount: { type: 'string', nullable: true },
+            panCard: { type: 'string', nullable: true },
+            rating: { type: 'number', nullable: true },
+            totalJobs: { type: 'number' },
+            totalEarnings: { type: 'number' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                email: { type: 'string' },
+                role: { type: 'string', enum: ['citizen', 'worker', 'admin'] },
+              },
+            },
+            assignedIssues: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  status: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        WorkerListResponse: {
+          type: 'object',
+          properties: {
+            workers: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Worker' },
+            },
+            total: { type: 'number' },
+            page: { type: 'number' },
+            limit: { type: 'number' },
+          },
+        },
+        UpdateWorkerRequest: {
+          type: 'object',
+          properties: {
+            description: { type: 'string', nullable: true },
+            tags: {
+              type: 'array',
+              items: { type: 'string' },
+              nullable: true,
+            },
+            location: { type: 'string', nullable: true },
+            status: {
+              type: 'string',
+              enum: ['available', 'busy', 'offline', 'on_leave'],
+              nullable: true,
+            },
+            phone: { type: 'string', nullable: true },
+            organizationName: { type: 'string', nullable: true },
+            type: {
+              type: 'string',
+              enum: ['individual', 'organization'],
+              nullable: true,
+            },
+            upiId: {
+              type: 'string',
+              nullable: true,
+              description: 'UPI ID (e.g., 9876543210@paytm)',
+            },
+            bankAccount: { type: 'string', nullable: true },
+            panCard: { type: 'string', nullable: true },
+          },
+        },
+        AssignWorkerRequest: {
+          type: 'object',
+          required: ['issueId'],
+          properties: {
+            issueId: {
+              type: 'string',
+              description: 'Issue ID to assign to worker',
+            },
+          },
+        },
+        AutoAssignRequest: {
+          type: 'object',
+          required: ['issueId'],
+          properties: {
+            issueId: {
+              type: 'string',
+              description: 'Issue ID to auto-assign',
+            },
+          },
+        },
       },
     },
     security: [

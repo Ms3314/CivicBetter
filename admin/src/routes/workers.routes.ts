@@ -369,48 +369,6 @@ router.use(requireAdmin);
 
 /**
  * @swagger
- * /workers/{workerId}/assign:
- *   post:
- *     summary: Assign issue to worker
- *     tags: [Workers, Assignments]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: workerId
- *         required: true
- *         schema:
- *           type: string
- *         description: Worker ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [issueId]
- *             properties:
- *               issueId:
- *                 type: string
- *                 description: Issue ID to assign
- *     responses:
- *       200:
- *         description: Issue assigned successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Issue'
- *       400:
- *         description: issueId is required or invalid
- *       404:
- *         description: Worker or issue not found
- *       500:
- *         description: Failed to assign worker
- */
-router.post('/:workerId/assign', WorkersController.assignToWorker);
-
-/**
- * @swagger
  * /workers/auto-assign:
  *   post:
  *     summary: Auto-assign worker to issue using round-robin method
@@ -427,12 +385,7 @@ router.post('/:workerId/assign', WorkersController.assignToWorker);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [issueId]
- *             properties:
- *               issueId:
- *                 type: string
- *                 description: Issue ID to auto-assign
+ *             $ref: '#/components/schemas/AutoAssignRequest'
  *     responses:
  *       200:
  *         description: Worker auto-assigned successfully
@@ -460,6 +413,43 @@ router.post('/:workerId/assign', WorkersController.assignToWorker);
  *         description: Failed to auto-assign worker
  */
 router.post('/auto-assign', WorkersController.autoAssign);
+
+/**
+ * @swagger
+ * /workers/{workerId}/assign:
+ *   post:
+ *     summary: Assign issue to worker
+ *     tags: [Workers, Assignments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: workerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Worker ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AssignWorkerRequest'
+ *     responses:
+ *       200:
+ *         description: Issue assigned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Issue'
+ *       400:
+ *         description: issueId is required or invalid
+ *       404:
+ *         description: Worker or issue not found
+ *       500:
+ *         description: Failed to assign worker
+ */
+router.post('/:workerId/assign', WorkersController.assignToWorker);
 
 export default router;
 
