@@ -32,8 +32,7 @@ jobs:
             echo "Starting new container (migrations run automatically on startup)..."
             docker run -d \
               --name civicbetter-api \
-              --network=host \
-              -e "PORT=3000" \
+              -p 3000:3000 \
               -e "DATABASE_URL=${{ vars.DB_URL }}" \
               --restart unless-stopped \
               civicbetter-api:latest
