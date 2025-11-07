@@ -5,30 +5,35 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/index.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "prisma db seed"
   },
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
-    "drizzle-kit": "^0.31.6",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "prisma": "^6.19.0",
     "tsx": "^4.20.6"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/client": "^6.19.0",
     "@supabase/supabase-js": "^2.79.0",
     "@types/express": "^5.0.5",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.44.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   }
 }

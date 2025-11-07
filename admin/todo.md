@@ -1,0 +1,4 @@
+- i need to test the authentication 
+- i need to test the other routes as well
+- basic inssues tracking and other features 
+- impliment the payments thing 

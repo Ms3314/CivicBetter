@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  citizen
+  worker
+  admin
+}
+
+enum IssueStatus {
+  pending
+  assigned
+  accepted
+  in_progress
+  completed
+  rejected
+
+  @@map("issue_status")
+}
+
+enum WorkerStatus {
+  available
+  busy
+  offline
+  on_leave
+}
+
+enum WorkerType {
+  individual
+  organization
+}
+
+model Worker {
+  id          String      @id @default(uuid())
+  userId      String      @unique @map("user_id")
+  description String?
+  tags        String[]    @default([]) // Specializations/skills
+  location    String?
+  status      WorkerStatus @default(available)
+  type        WorkerType  @default(individual)
+  organizationName String? @map("organization_name") // If type is organization
+  phone       String?
+  upiId       String?     @map("upi_id") // UPI ID for payments (e.g., 9876543210@paytm)
+  bankAccount String?     @map("bank_account") // Optional bank account backup
+  panCard     String?     @map("pan_card") // PAN card for records
+  rating      Float?      @default(0)
+  totalJobs   Int         @default(0) @map("total_jobs")
+  totalEarnings     Float   @default(0) @map("total_earnings")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at")
+
+  user        User        @relation("WorkerProfile", fields: [userId], references: [id], onDelete: Cascade)
+  assignedIssues Issue[]  @relation("WorkerIssues")
+  payments    Payment[]
+  reviews     Review[]
+
+  @@map("workers")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(citizen)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  createdIssues Issue[] @relation("CreatedIssues")
+  assignedIssues Issue[] @relation("AssignedIssues")
+  workerProfile Worker?  @relation("WorkerProfile")
+  reviews       Review[] @relation("Reviewer")
+
+  @@map("users")
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+}
+
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
+model Issue {
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  category    String
+  photo       String?
+  location    String
+  status      IssueStatus @default(pending)
+  createdBy   String      @map("created_by")
+  assignedTo  String?     @map("assigned_to")
+  workerId    String?     @map("worker_id") // Reference to Worker model
+  tags        String[]    @default([]) // Tags for matching with worker tags
+  amount      Float?      @default(0) // Payment amount for this issue
+  completedAt DateTime?   @map("completed_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at")
+
+  creator  User  @relation("CreatedIssues", fields: [createdBy], references: [id])
+  assignee User?  @relation("AssignedIssues", fields: [assignedTo], references: [id])
+  worker   Worker? @relation("WorkerIssues", fields: [workerId], references: [id])
+  payments Payment[]
+  review   Review?
+
+  @@map("issues")
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  issueId         String        @map("issue_id")
+  workerId        String        @map("worker_id")
+  amount          Float
+  currency        String        @default("INR")
+  status          PaymentStatus @default(pending)
+  transactionId   String?       @map("transaction_id") // UPI transaction ID (manual entry)
+  screenshotUrl   String?       @map("screenshot_url") // Optional screenshot of payment
+  notes           String?       // Additional notes
+  processedBy     String?       @map("processed_by") // Admin who processed
+  processedAt     DateTime?     @map("processed_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  worker  Worker @relation(fields: [workerId], references: [id])
+
+  @@map("payments")
+}
+
+model Review {
+  id          String       @id @default(uuid())
+  issueId     String       @unique @map("issue_id")
+  workerId    String       @map("worker_id")
+  reviewerId  String       @map("reviewer_id") // Admin who reviewed
+  rating      Int          // 1-5 stars
+  comment     String?
+  status      ReviewStatus @default(pending)
+  reviewedAt  DateTime?    @map("reviewed_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at")
+
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  worker  Worker @relation(fields: [workerId], references: [id])
+  reviewer User  @relation("Reviewer", fields: [reviewerId], references: [id])
+
+  @@map("reviews")
+}
+

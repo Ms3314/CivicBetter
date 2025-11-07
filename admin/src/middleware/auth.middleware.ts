@@ -2,8 +2,6 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import jwt from 'jsonwebtoken';
 import { db } from '../db';
-import { users } from '../db/schema';
-import { eq } from 'drizzle-orm';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 
@@ -34,7 +32,9 @@ export async function authenticate(
     }
 
     // Fetch user from database
-    const [user] = await db.select().from(users).where(eq(users.id, decoded.id)).limit(1);
+    const user = await db.user.findUnique({
+      where: { id: decoded.id },
+    });
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }

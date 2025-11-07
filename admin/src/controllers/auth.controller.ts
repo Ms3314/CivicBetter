@@ -1,8 +1,6 @@
 import type { Request, Response } from 'express';
 import type { LoginRequest, RegisterRequest, AuthenticatedRequest } from '../types';
 import { db } from '../db';
-import { users } from '../db/schema';
-import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
@@ -31,7 +29,9 @@ export class AuthController {
     }
 
     try {
-      const [found] = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
+      const found = await db.user.findUnique({
+        where: { email: body.email },
+      });
       if (!found) return res.status(401).json({ error: 'Invalid credentials' });
 
       // Check role
@@ -74,23 +74,20 @@ export class AuthController {
 
     try {
       // Check if exists
-      const [existing] = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
+      const existing = await db.user.findUnique({
+        where: { email: body.email },
+      });
       if (existing) return res.status(409).json({ error: 'User already exists' });
 
       const hashed = await bcrypt.hash(body.password, 10);
-      const [created] = await db
-        .insert(users)
-        .values({
+      const created = await db.user.create({
+        data: {
           email: body.email,
           password: hashed,
           name: body.name,
           role: body.role,
-        })
-        .returning();
-
-      if (!created) {
-        return res.status(500).json({ error: 'Failed to create user' });
-      }
+        },
+      });
 
       const token = signToken({ id: created.id, email: created.email, role: created.role as UserRole });
       return res.status(201).json({
@@ -116,7 +113,9 @@ export class AuthController {
     const authReq = req as AuthenticatedRequest;
     if (!authReq.user?.id) return res.status(401).json({ error: 'Unauthorized' });
     try {
-      const [found] = await db.select().from(users).where(eq(users.id, authReq.user.id)).limit(1);
+      const found = await db.user.findUnique({
+        where: { id: authReq.user.id },
+      });
       if (!found) return res.status(404).json({ error: 'User not found' });
       return res.json({ id: found.id, email: found.email, role: found.role, name: found.name });
     } catch (error) {

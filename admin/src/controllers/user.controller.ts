@@ -1,7 +1,5 @@
 import type { Request, Response } from 'express';
 import { db } from '../db';
-import { users } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
 
 /**
  * User Controller
@@ -18,7 +16,9 @@ export class UserController {
     if (!id) return res.status(400).json({ error: 'User ID is required' });
 
     try {
-      const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+      const user = await db.user.findUnique({
+        where: { id },
+      });
       if (!user) return res.status(404).json({ error: 'User not found' });
       return res.json(user);
     } catch (error) {
@@ -38,15 +38,14 @@ export class UserController {
     const offset = (page - 1) * limit;
 
     try {
-      const rows = await db
-        .select()
-        .from(users)
-        .orderBy(desc(users.createdAt))
-        .limit(limit)
-        .offset(offset);
-
-      const totalRows = await db.select({ id: users.id }).from(users);
-      const total = totalRows.length;
+      const [rows, total] = await Promise.all([
+        db.user.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: offset,
+        }),
+        db.user.count(),
+      ]);
 
       return res.json({ users: rows, total, page, limit });
     } catch (error) {
@@ -67,19 +66,17 @@ export class UserController {
     const body = req.body as Partial<{ name: string; role: 'citizen' | 'worker' | 'admin'; email: string; password: string }>;
 
     try {
-      const [updated] = await db
-        .update(users)
-        .set({
-          name: body.name,
-          role: body.role,
-          email: body.email,
-          password: body.password,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, id))
-        .returning();
+      const updateData: any = {};
+      if (body.name !== undefined) updateData.name = body.name;
+      if (body.role !== undefined) updateData.role = body.role;
+      if (body.email !== undefined) updateData.email = body.email;
+      if (body.password !== undefined) updateData.password = body.password;
 
-      if (!updated) return res.status(404).json({ error: 'User not found' });
+      const updated = await db.user.update({
+        where: { id },
+        data: updateData,
+      });
+
       return res.json(updated);
     } catch (error) {
       console.error('updateUser error:', error);

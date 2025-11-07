@@ -13,8 +13,49 @@ const router = Router();
 router.use(authenticate);
 
 /**
- * Upload single image
- * POST /upload/image
+ * @swagger
+ * /upload/image:
+ *   post:
+ *     summary: Upload a single image
+ *     tags: [Upload]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file to upload
+ *               folder:
+ *                 type: string
+ *                 default: issues
+ *                 description: Storage folder name
+ *     responses:
+ *       200:
+ *         description: Image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UploadImageResponse'
+ *       400:
+ *         description: No file uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Failed to upload image
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.post('/image', uploadSingle, handleUploadError, async (req: Request, res: Response) => {
   try {
@@ -47,8 +88,51 @@ router.post('/image', uploadSingle, handleUploadError, async (req: Request, res:
 });
 
 /**
- * Upload multiple images
- * POST /upload/images
+ * @swagger
+ * /upload/images:
+ *   post:
+ *     summary: Upload multiple images
+ *     tags: [Upload]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - files
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Image files to upload
+ *               folder:
+ *                 type: string
+ *                 default: issues
+ *                 description: Storage folder name
+ *     responses:
+ *       200:
+ *         description: Images uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UploadMultipleImagesResponse'
+ *       400:
+ *         description: No files uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Failed to upload images
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.post('/images', uploadMultiple, handleUploadError, async (req: Request, res: Response) => {
   try {

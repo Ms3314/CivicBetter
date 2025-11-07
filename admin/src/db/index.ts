@@ -1,9 +1,7 @@
-import { drizzle } from 'drizzle-orm/neon-http';
-import { neon } from '@neondatabase/serverless';
-import * as schema from './schema';
-import './schema/relations'; // Import relations to register them
+import { PrismaClient } from '@prisma/client';
 
-const sql = neon(process.env.DATABASE_URL || '');
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
 
-export const db = drizzle(sql, { schema });
-
+export { prisma as db };

@@ -1,8 +1,6 @@
 import type { Request, Response } from 'express';
 import type { CreateIssueRequest, EditIssueRequest, AuthenticatedRequest } from '../types';
 import { db } from '../db';
-import { issues } from '../db/schema';
-import { eq, desc, and } from 'drizzle-orm';
 
 /**
  * Issue Controller
@@ -29,9 +27,8 @@ export class IssueController {
     }
 
     try {
-      const [created] = await db
-        .insert(issues)
-        .values({
+      const created = await db.issue.create({
+        data: {
           title: body.title,
           description: body.description,
           category: body.category,
@@ -39,8 +36,8 @@ export class IssueController {
           photo: body.photo ?? null,
           createdBy: authReq.user!.id,
           status: 'pending',
-        })
-        .returning();
+        },
+      });
 
       return res.status(201).json(created);
     } catch (error) {
@@ -60,43 +57,48 @@ export class IssueController {
     // TODO: Check if user has permission (creator or admin)
     // TODO: Update issue in database
     // TODO: Return updated issue
-
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ error: 'Issue ID is required' });
-    }
-    const body = req.body as EditIssueRequest & {
-      category?: string;
-      location?: string;
-      photo?: string | null;
-      assignedTo?: string | null;
-    };
-
+    // a citizen  can only update few things in a issue be it title, description, category, location, photo
     try {
-      const [updated] = await db
-        .update(issues)
-        .set({
-          title: body.title,
-          description: body.description,
-          status: body.status,
-          category: body.category,
-          location: body.location,
-          photo: body.photo,
-          assignedTo: body.assignedTo,
-          updatedAt: new Date(),
-        })
-        .where(eq(issues.id, id))
-        .returning();
+      const authReq = req.user ;
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ error: 'Issue ID is required' });
+      }
+      type requestForUpdate =  {
+        title? : string ,
+        description? : string ,
+        category? : string ,
+        location? : string ,
+        photo? : string ,
+      }
+      const {title , description , category , location , photo} = req.body as requestForUpdate;
 
-      if (!updated) {
+      const existing = await db.issue.findUnique({
+        where: { id },
+      });
+      if (!existing) {
         return res.status(404).json({ error: 'Issue not found' });
       }
+      if (existing.createdBy !== authReq?.id) {
+        return res.status(403).json({ error: 'You can only update your own issues' });
+      }
 
-      return res.json(updated);
+      const updated = await db.issue.update({
+        where: { id },
+        data: {
+          title : title != null ? title : existing.title ,
+          description : description != null ? description : existing.description ,
+          category : category != null ? category : existing.category ,
+          location : location != null ? location : existing.location ,
+          photo : photo != null ? photo : existing.photo ,
+        }
+      });
+      return res.json(updated); 
     } catch (error) {
-      console.error('editIssue error:', error);
-      return res.status(500).json({ error: 'Failed to update issue' });
+      res.status(500).json({ error: 'Failed to update issue' });
     }
+      
+    
   }
 
   /**
@@ -115,7 +117,9 @@ export class IssueController {
     }
 
     try {
-      const [found] = await db.select().from(issues).where(eq(issues.id, id)).limit(1);
+      const found = await db.issue.findUnique({
+        where: { id },
+      });
       if (!found) {
         return res.status(404).json({ error: 'Issue not found' });
       }
@@ -132,21 +136,31 @@ export class IssueController {
    * Requires: Authentication
    */
   static async listIssues(req: Request, res: Response) {
+    // this list issues is only getting issues that are submitted by that particular citizen 
+    const authReq = req.user ;
+    if (!authReq?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
     const page = Number(req.query.page ?? 1);
     const limit = Math.min(Number(req.query.limit ?? 10), 50);
     const offset = (page - 1) * limit;
 
     try {
-      const rows = await db
-        .select()
-        .from(issues)
-        .orderBy(desc(issues.createdAt))
-        .limit(limit)
-        .offset(offset);
-
-      // total count
-      const totalRows = await db.select({ id: issues.id }).from(issues);
-      const total = totalRows.length;
+      const [rows, total] = await Promise.all([
+        db.issue.findMany({
+          where: {
+            createdBy: authReq?.id,
+          }, 
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip: offset,
+        }),
+        db.issue.count({
+          where: {
+            createdBy: authReq?.id,
+          },
+        }),
+      ]);
 
       return res.json({ issues: rows, total, page, limit });
     } catch (error) {
