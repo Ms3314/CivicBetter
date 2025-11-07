@@ -36,7 +36,7 @@ jobs:
             echo "Starting container..."
             docker run -d \
               --name civicbetter \
-              -p 3000:3000 \
+              --network=host \
               -e "DATABASE_URL=${{ vars.DB_URL }}" \
               --restart unless-stopped \
               $IMAGE
