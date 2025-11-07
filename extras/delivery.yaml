@@ -1,0 +1,47 @@
+# name: Delivery (Redeploy Only)
+
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       image_tag:
+#         description: "Image tag to deploy (default: latest)"
+#         required: false
+#         default: "latest"
+#       env_file:
+#         description: "Path to env file on VM"
+#         required: false
+#         default: "/etc/civicbetter/admin.env"
+
+# jobs:
+#   redeploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: SSH Redeploy
+#         uses: appleboy/ssh-action@v0.1.6
+#         with:
+#           host: ${{ secrets.VM_HOST }}
+#           username: ${{ secrets.VM_USER }}
+#           key: ${{ secrets.VM_SSH_KEY }}
+#           script: |
+#             IMAGE=ghcr.io/${{ github.repository_owner }}/civicbetter-admin:${{ github.event.inputs.image_tag || 'latest' }}
+#             ENV_FILE=${{ github.event.inputs.env_file || '/etc/civicbetter/admin.env' }}
+
+#             echo "Logging into GHCR..."
+#             docker login ghcr.io -u ${{ secrets.GHCR_USER || github.actor }} -p ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+
+#             echo "Pulling image $IMAGE ..."
+#             docker pull $IMAGE || true
+
+#             echo "Stopping old container (ignore errors)..."
+#             docker stop civicbetter-admin || true
+#             docker rm civicbetter-admin || true
+
+#             echo "Starting container..."
+#             docker run -d \
+#               --name civicbetter-admin \
+#               -p 80:3000 \
+#               --e "DATABASE_URL=${{secrets.DB_URL}}" \
+#               --restart unless-stopped \
+#               $IMAGE
+
+#             echo "✅ Delivery completed!"

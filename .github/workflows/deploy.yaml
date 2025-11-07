@@ -33,7 +33,7 @@ jobs:
             docker run -d \
               --name civicbetter-api \
               -p 80:3000 \
-              --env-file /etc/civicbetter/admin.env \
+              --e "DATABASE_URL=${{vars.DB_URL}}" \
               --restart unless-stopped \
               civicbetter-api:latest
             
