@@ -23,7 +23,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            IMAGE=ghcr.io/${{ github.repository_owner }}/CivicBetter-Admin:${{ github.event.inputs.image_tag || 'latest' }}
+            IMAGE=ghcr.io/${{ github.repository_owner }}/civicbetter:${{ github.event.inputs.image_tag || 'latest' }}
             echo "Logging into GHCR..."
             docker login ghcr.io -u ${{ secrets.GHCR_USER || github.actor }} -p ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
 
@@ -31,12 +31,12 @@ jobs:
             docker pull $IMAGE || true
 
             echo "Stopping old container (ignore errors)..."
-            docker stop civicbetter-admin || true
-            docker rm civicbetter-admin || true
+            docker stop civicbetter || true
+            docker rm civicbetter || true
 
             echo "Starting container..."
             docker run -d \
-              --name civicbetter-admin \
+              --name civicbetter \
               -p 80:3000 \
               --e "DATABASE_URL=${{secrets.DB_URL}}" \
               --restart unless-stopped \
