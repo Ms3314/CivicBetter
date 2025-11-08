@@ -38,6 +38,7 @@ jobs:
               --name civicbetter \
               --network="host" \
               -e "DATABASE_URL=${{ vars.DB_URL }}" \
+              -e "API_URL=${{ secrets.API_URL }}" \
               --restart unless-stopped \
               $IMAGE
 
